@@ -1,0 +1,60 @@
+# Infraestructura del backend en Render (Blueprint). Se edita aqui y se aplica
+# desde el panel de Render -> New -> Blueprint.
+services:
+  - type: web
+    name: legal-back
+    runtime: node
+    region: oregon
+    plan: free
+    repo: https://github.com/ltc2026a-design/LegalBack
+    rootDir: .
+    branch: main
+    buildCommand: >-
+      npm ci &&
+      npx prisma generate &&
+      npx prisma migrate deploy &&
+      npm run build
+    startCommand: node dist/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: legal-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES
+        value: 8h
+      - key: TRUST_PROXY
+        value: '1'
+      - key: PG_POOL_MAX
+        value: '10'
+      # Origenes del front en Vercel. Sin esto el navegador bloquea las llamadas.
+      - key: ORIGINES_PERMITIDAS
+        sync: false
+      # Web Push (opcional; vacio = sin push web)
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
+      # Asistente con IA (opcional; vacio = busqueda guiada)
+      - key: LLM_PROVIDER
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODELO
+        sync: false
+
+databases:
+  - name: legal-db
+    databaseName: legal
+    plan: free
+    region: oregon
+    # Postgres 16: el plan free de base de datos solo esta garantizado 90 dias.
+    postgresMajorVersion: '16'

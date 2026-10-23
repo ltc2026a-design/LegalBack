@@ -1,0 +1,25 @@
+# Dependencias y builds
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Base de datos local embebida (nunca se sube)
+.pgdata/
+.legal-pgdata/
+
+# Secretos y estado local
+.env
+.env.local
+.env.*.local
+token.txt
+CREDENCIALES.md
+*.log
+
+# Prisma genera el cliente en cada build
+src/generated/
+
+# Sistema operativo / editor / render
+.DS_Store
+Thumbs.db
+.vercel/

@@ -1,0 +1,57 @@
+{
+  "descripcion": "Manifesto de procedencia de los libros estatales y municipales de Quintana Roo. Cada urlOficial es el PDF consolidado que publica el Congreso del Estado; como los host *.gob.mx no siempre son alcanzables desde esta maquina, la descarga se hace por la captura de web.archive.org que se registro en captura. Actualizar un libro = volver a resolver el PDF vigente del directorio y cambiar captura/poeFecha.",
+  "directorios": {
+    "codigos": "https://documentos.congresoqroo.gob.mx/codigos/",
+    "leyes": "https://documentos.congresoqroo.gob.mx/leyes/"
+  },
+  "libros": [
+    {
+      "slug": "codigo-civil-qroo",
+      "archivo": "codigo-civil-qroo.pdf",
+      "nombre": "Código Civil para el Estado de Quintana Roo",
+      "urlOficial": "https://documentos.congresoqroo.gob.mx/codigos/C2-XVIII-23062026-20260724T145357-C1820260616258.pdf",
+      "captura": "20260917064003",
+      "poeFecha": "2026-07-23"
+    },
+    {
+      "slug": "codigo-penal-qroo",
+      "archivo": "codigo-penal-qroo.pdf",
+      "nombre": "Código Penal para el Estado de Quintana Roo",
+      "urlOficial": "https://documentos.congresoqroo.gob.mx/codigos/C6-XVIII-10042026-20260413T103001-C1820260410217-Código-Penal.pdf",
+      "captura": "20261014173223",
+      "poeFecha": "2026-04-10"
+    },
+    {
+      "slug": "codigo-fiscal-qroo",
+      "archivo": "codigo-fiscal-qroo.pdf",
+      "nombre": "Código Fiscal del Estado de Quintana Roo",
+      "urlOficial": "https://documentos.congresoqroo.gob.mx/codigos/C5-XVII-24072024-20240814T143943-L1720240724258-codigo-fiscal.pdf",
+      "captura": "20250928085451",
+      "poeFecha": "2024-07-24"
+    },
+    {
+      "slug": "codigo-fiscal-municipal-qroo",
+      "archivo": "codigo-fiscal-municipal-qroo.pdf",
+      "nombre": "Código Fiscal Municipal del Estado de Quintana Roo",
+      "urlOficial": "https://documentos.congresoqroo.gob.mx/codigos/C4-XVIII-10122025-20251220T155419-L1820251210173-Código-Fiscal-Municipal.pdf",
+      "captura": "20261014043546",
+      "poeFecha": "2025-12-10"
+    },
+    {
+      "slug": "codigo-procedimientos-justicia-administrativa-qroo",
+      "archivo": "codigo-justicia-administrativa-qroo.pdf",
+      "nombre": "Código de Justicia Administrativa del Estado de Quintana Roo",
+      "urlOficial": "https://documentos.congresoqroo.gob.mx/codigos/C10-XVII-13072023-20230720T152016-C1720230713089.pdf",
+      "captura": "20250928051121",
+      "poeFecha": "2023-07-13"
+    },
+    {
+      "slug": "ley-organica-poder-legislativo-qroo",
+      "archivo": "ley-organica-poder-legislativo-qroo.pdf",
+      "nombre": "Ley Orgánica del Poder Legislativo del Estado de Quintana Roo",
+      "urlOficial": "https://documentos.congresoqroo.gob.mx/leyes/L198-XVIII-20260512-L1820260512232-Ley-Organica-del-Poder-Legislativo.pdf",
+      "captura": "20260514032100",
+      "poeFecha": "2026-05-12"
+    }
+  ]
+}
