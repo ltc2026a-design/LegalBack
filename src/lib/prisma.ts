@@ -1,10 +1,11 @@
 // Zona 3: cliente Prisma compartido por la API publica de consulta (SOLO LECTURA).
 // Mismo patron que el seed: Prisma 7 + adaptador pg, con la URL desde el entorno.
 //
-// Postgres administrado (Neon, Supabase, Railway...): se conecta anadiendo
-// `?sslmode=require` a la DATABASE_URL. El driver `pg` ya lo entiende y cifra
-// solo; no hace falta codigo aqui. En un VPS con Postgres en la misma maquina
-// la URL va sin ese parametro y cifrar seria un gasto inutil.
+// Postgres administrado (Neon, Supabase, Railway...): la URL lleva el modo SSL.
+// Con Supabase tiene que ser `sslmode=no-verify`, no `require`: este driver `pg`
+// trata `require` como `verify-full` y la cadena de certificados del pooler no es
+// verificable en publico. En un VPS con Postgres en la misma maquina la URL va sin
+// ese parametro y cifrar seria un gasto inutil.
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';

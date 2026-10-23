@@ -26,10 +26,14 @@ services:
       - key: NODE_ENV
         value: production
       # Base de datos: Supabase (fuera de Render). Pega aqui la URI del POOLER DE
-      # SESION, puerto 5432, con ?sslmode=require:
-      #   postgresql://postgres.<host>:<pass>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
-      # No uses el pooler de transacciones (6543): hace pgbouncer y Prisma necesita
-      # sentencias preparadas estables para las migraciones.
+      # SESION (usuario postgres.<ref>, puerto 5432):
+      #   postgresql://postgres.<ref>:<pass>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=no-verify
+      # `no-verify` y no `require`: el driver `pg` de Node trata `require` como
+      # `verify-full` y la cadena de certificados del pooler de Supabase no es
+      # verificable publicamente (falla SELF_SIGNED_CERT_IN_CHAIN). El conector de
+      # Prisma si acepta `require`, pero el servidor corre sobre `pg`, asi que va
+      # `no-verify` para las dos cosas. Nada de pooler de transacciones (6543):
+      # pgbouncer rompe las sentencias preparadas de las migraciones.
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET

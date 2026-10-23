@@ -50,33 +50,37 @@ Y en **Environment** hacen falta mínimo estas, porque `server.ts` se niega a ar
 ## La base de datos: Supabase
 
 Supabase → **Connect** (arriba a la derecha) → pestaña *Database* → **Connection string** →
-*URI*, y elige el **pooler de sesión (puerto 5432)**. Queda algo como:
+*URI*, y elige el **pooler de sesión (puerto 5432)**. El usuario es `postgres.<ref>`:
 
 ```
-postgresql://postgres.<host>:<CONTRASENA>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+postgresql://postgres.djdvfpqikvtttliidpuh:<CONTRASENA>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=no-verify
 ```
 
-Esa cadena va en tres sitios y en **ninguno se sube a git**: `backend/.env` local (para
-migrar y volcar desde la laptop), el `DATABASE_URL` del servicio en Render, y nada más. La
-`sb_publishable_...` y la `anon` que enseña Supabase son para su API REST: **Prisma no las usa**.
+`sslmode=no-verify` y no `require`: el driver `pg` de Node trata `require` como `verify-full` y
+la cadena de certificados del pooler no es verificable en público (`SELF_SIGNED_CERT_IN_CHAIN`).
+La **conexión directa** (`db.<ref>.supabase.co`) es solo IPv6 y desde una casa con IPv4 no
+arranca sin el add-on de pago, así que no la uses. El **pooler de transacciones (6543)** hace
+pgbouncer y rompe las sentencias preparadas de las migraciones. La `sb_publishable_...` y la
+`anon` que enseña Supabase son para su API REST: **Prisma no las usa**.
 
-**Orden la primera vez** (y solo la primera):
+Esa cadena va en dos sitios y en **ninguno se sube a git**: el `DATABASE_URL` del servicio en
+Render, y `backend/.env` local solo cuando toque migrar o volcar.
+
+**Ya aplicado (2026-10-23):** las 4 migraciones están corriendo en Supabase y el contenido
+volcado (14.838 filas: 9 libros, 6.824 artículos). Cuando cambie el esquema otra vez, el orden
+es este — `replicar` **no crea tablas**, lee las que existen, las vacía con
+`TRUNCATE ... CASCADE` e inserta:
 
 ```bash
 cd backend
-DATABASE_URL="<uri de supabase>" npx prisma migrate deploy     # crea las 13 tablas
-npm run replicar -- --destino="<uri de supabase>" --confirmar=sobrescribir
+DATABASE_URL="<uri>" npx prisma migrate deploy
+npm run replicar -- --destino="<uri>" --confirmar=sobrescribir
 ```
-
-`replicar` **no crea tablas**: lee las que ya existen en el destino, las vacía con
-`TRUNCATE ... CASCADE` e inserta fila por fila, así que sin las migraciones aplicadas no
-tiene dónde volcar. Después de eso el esquema queda marcado como migrado y los despliegues
-siguientes de `migrate deploy` desde el build de Render no tocan nada.
 
 Notas del plan free de Supabase: la base **no se borra** a los 90 días (a diferencia de la de
 Render), pero el proyecto **se pausa** si nadie lo toca en una semana y despierta con la primera
-conexión — el primer arranque del API tras una pausa puede tardar unos segundos. El pooler
-permite 60 conexiones; con `PG_POOL_MAX=10` por proceso sobra.
+conexión — la primera llamada después de la pausa puede fallar una vez (`P1001`) y ya. El pooler
+admite 60 conexiones; con `PG_POOL_MAX=10` por proceso sobra.
 
 ## Cómo llegan los libros nuevos o actualizados
 
