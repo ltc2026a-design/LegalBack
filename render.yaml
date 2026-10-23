@@ -9,8 +9,12 @@ services:
     repo: https://github.com/ltc2026a-design/LegalBack
     rootDir: .
     branch: main
+    # El prefijo NODE_ENV=development es obligatorio: Render arranca con NODE_ENV=production
+    # y npm omite entonces las devDependencies, donde viven los @types/* (express, cors,
+    # jsonwebtoken, web-push, node-cron). Sin esas definiciones `tsc` no compila y no nace
+    # dist/, aunque prisma y typescript aparezcan por transitividad de @prisma/client.
     buildCommand: >-
-      npm ci &&
+      NODE_ENV=development npm ci &&
       npx prisma generate &&
       npx prisma migrate deploy &&
       npm run build
@@ -18,7 +22,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: '22'
+        value: '24'
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
