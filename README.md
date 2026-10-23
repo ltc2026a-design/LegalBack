@@ -16,10 +16,10 @@ Express 5 + Prisma 7 + PostgreSQL. Sirve la API en `/api` y, si le apuntas las c
 
 1. Crea el repositorio `LegalBack` y sube este código (ver abajo "Después de cada cambio").
 2. Render → **New → Blueprint**, conecta el repo y escoge `render.yaml`.
-3. Render pregunta por las variables marcadas `sync: false`: pega los orígenes de Vercel
-   en `ORIGINES_PERMITIDAS` (`https://*.vercel.app` basta para pocas personas) y deja
-   vacías las de IA/push si aún no las usas.
-4. Crea el **PostgreSQL** del blueprint (Render lo levanta solo y asigna `DATABASE_URL`).
+3. Render pregunta por las variables marcadas `sync: false`: pega la **URI de Supabase** en
+   `DATABASE_URL` y los orígenes de Vercel en `ORIGINES_PERMITIDAS`
+   (`https://*.vercel.app` basta para pocas personas); deja vacías las de IA/push si aún no las usas.
+4. El blueprint ya no crea base de datos: vive en Supabase (ver la sección de abajo).
 5. Al terminar el build revisa `https://<tu-servicio>.onrender.com/api/health` →
    `{"ok":true,...}`.
 6. En Vercel, pon `VITE_API_URL = https://<tu-servicio>.onrender.com/api` y redepliega.
@@ -44,15 +44,39 @@ instalando así en limpio: `tsc` y `prisma` sobreviven solo por transitividad de
 pero los tipos no).
 
 Y en **Environment** hacen falta mínimo estas, porque `server.ts` se niega a arrancar sin ellas:
-`DATABASE_URL` (mejor con *Add → Connect to database → Render's internal connection string*),
-`JWT_SECRET` (una cadena larga al azar), `ORIGINES_PERMITIDAS=https://*.vercel.app`,
-`TRUST_PROXY=1`, `PG_POOL_MAX=10`. La base Postgres hay que crearla aparte (New → PostgreSQL,
-plan free, `legal`); el Blueprint lo hace solo, por eso conviene más.
+`DATABASE_URL` (la URI de Supabase), `JWT_SECRET` (una cadena larga al azar),
+`ORIGINES_PERMITIDAS=https://*.vercel.app`, `TRUST_PROXY=1`, `PG_POOL_MAX=10`.
 
-**El plan free de base de datos caduca a los 90 días** (Render la borra y avisa por correo).
-Si el servicio se pausa, la primera llamada tarda ~50 s en arrancar. Para una decena de
-usuarios basta; si se queda corto, el plan de pago del mismo Render o una VM gratuita de
-siempre (Oracle Cloud Always Free / Google Cloud e2-micro) corren el mismo código sin cambios.
+## La base de datos: Supabase
+
+Supabase → **Connect** (arriba a la derecha) → pestaña *Database* → **Connection string** →
+*URI*, y elige el **pooler de sesión (puerto 5432)**. Queda algo como:
+
+```
+postgresql://postgres.<host>:<CONTRASENA>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+```
+
+Esa cadena va en tres sitios y en **ninguno se sube a git**: `backend/.env` local (para
+migrar y volcar desde la laptop), el `DATABASE_URL` del servicio en Render, y nada más. La
+`sb_publishable_...` y la `anon` que enseña Supabase son para su API REST: **Prisma no las usa**.
+
+**Orden la primera vez** (y solo la primera):
+
+```bash
+cd backend
+DATABASE_URL="<uri de supabase>" npx prisma migrate deploy     # crea las 13 tablas
+npm run replicar -- --destino="<uri de supabase>" --confirmar=sobrescribir
+```
+
+`replicar` **no crea tablas**: lee las que ya existen en el destino, las vacía con
+`TRUNCATE ... CASCADE` e inserta fila por fila, así que sin las migraciones aplicadas no
+tiene dónde volcar. Después de eso el esquema queda marcado como migrado y los despliegues
+siguientes de `migrate deploy` desde el build de Render no tocan nada.
+
+Notas del plan free de Supabase: la base **no se borra** a los 90 días (a diferencia de la de
+Render), pero el proyecto **se pausa** si nadie lo toca en una semana y despierta con la primera
+conexión — el primer arranque del API tras una pausa puede tardar unos segundos. El pooler
+permite 60 conexiones; con `PG_POOL_MAX=10` por proceso sobra.
 
 ## Cómo llegan los libros nuevos o actualizados
 
@@ -62,14 +86,14 @@ nuevo se ve en la web y en el APK sin publicar nada otra vez. Tres caminos:
 **a) Desde el panel de administración** (lo normal): *Cambios pendientes → Aprobar*.
 El conector vuelve a leer la fuente oficial y materializa el artículo.
 
-**b) Desde tu computadora, volcando la base local a Render:**
+**b) Desde tu computadora, volcando la base local a Supabase:**
 
 ```bash
 # en el monorepo, con el PostgreSQL local corriendo (npm run db)
-npm run replicar -- --destino="postgresql://USER:PASS@HOST:5432/legal?sslmode=require" --confirmar=sobrescribir
+npm run replicar -- --destino="postgresql://...pooler.supabase.com:5432/postgres?sslmode=require" --confirmar=sobrescribir
 ```
 
-`replicar` recrea las 13 tablas con su orden de claves foráneas, respeta el árbol
+`replicar` copia las 13 tablas en su orden de claves foráneas, respeta el árbol
 autorreferente de `seccion`, omite columnas generadas (`texto_ts`) y verifica los conteos.
 Es **destructivo en el destino** por eso exige `--confirmar=sobrescribir`.
 Nota: si Render bloquea conexiones externas, corre el mismo comando desde el entorno de Render (Shell).

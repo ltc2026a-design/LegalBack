@@ -25,10 +25,13 @@ services:
         value: '24'
       - key: NODE_ENV
         value: production
+      # Base de datos: Supabase (fuera de Render). Pega aqui la URI del POOLER DE
+      # SESION, puerto 5432, con ?sslmode=require:
+      #   postgresql://postgres.<host>:<pass>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+      # No uses el pooler de transacciones (6543): hace pgbouncer y Prisma necesita
+      # sentencias preparadas estables para las migraciones.
       - key: DATABASE_URL
-        fromDatabase:
-          name: legal-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES
@@ -55,10 +58,5 @@ services:
       - key: LLM_MODELO
         sync: false
 
-databases:
-  - name: legal-db
-    databaseName: legal
-    plan: free
-    region: oregon
-    # Postgres 16: el plan free de base de datos solo esta garantizado 90 dias.
-    postgresMajorVersion: '16'
+# Ya no se declara `databases:`: la base vive en Supabase y llega por DATABASE_URL.
+# El Postgres free de Render caduca a los 90 dias; la de Supabase no se borra.
